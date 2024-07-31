@@ -46,13 +46,13 @@ void readData(char *argv[])
     viableSolution.resize(m, 0);
     certificate.resize(n, 0);
 
-    for (int i = 0; i < m; ++i)
+    for (int i = 0; i < m; i++)
         inputFile >>
             c[i];
 
-    for (int i = 0; i < n; ++i)
+    for (int i = 0; i < n; i++)
     {
-        for (int j = 0; j < m; ++j)
+        for (int j = 0; j < m; j++)
             inputFile >> A[i][j];
         inputFile >> b[i];
     }
@@ -132,19 +132,15 @@ int findPivot(vector<vector<double>> &t, int col)
 
 void pivot(vector<vector<double>> &t, int i, int j)
 {
-    print(t);
-    cout << i << ' ' << j << endl;
     double pivotValue = t[i][j];
-    cout << "pivotValue " << pivotValue << endl
-         << endl;
-    if (pivotValue > 0 || pivotValue < 0)
+    if (pivotValue > eps)
     {
         int cols = t[0].size();
 
         for (int k = 0; k < cols; k++)
             t[i][k] /= pivotValue;
 
-        for (int k = 0; k <= n; ++k)
+        for (int k = 0; k <= n; k++)
         {
             if (k != i)
             {
