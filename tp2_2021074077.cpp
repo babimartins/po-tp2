@@ -13,14 +13,14 @@ vector<vector<double>> tableau;
 vector<vector<double>> tableauAux;
 vector<double> viableSolution;
 vector<double> certificate;
-vector<vector<int>> A;
-vector<int> b, c, B;
+vector<vector<double>> A;
+vector<double> b, c;
+vector<int> B;
 int n = 0, m = 0;
 
 void print(vector<vector<double>> &t)
 {
-    cout << endl
-         << "tableau " << endl;
+    cout << "tableau " << endl;
     for (int i = 0; i < t.size(); i++)
     {
         for (int j = 0; j < t[0].size(); j++)
@@ -39,7 +39,7 @@ void readData(char *argv[])
     inputFile >> n >> m;
     tableau.resize(n + 1, vector<double>(m + n + 1, 0));
     tableauAux.resize(n + 1, vector<double>(m + (2 * n) + 1, 0));
-    A.resize(n, vector<int>(m, 0));
+    A.resize(n, vector<double>(m, 0));
     b.resize(n, 0);
     c.resize(m, 0);
     B.resize(n, 0);
@@ -83,11 +83,12 @@ void initTableauAux()
         tableauAux[i + 1][m + 2 * n] = b[i];
         if (b[i] < 0)
         {
-            for (int j = 0; j <= m + (2 * n); j++)
+            for (int j = 0; j < m + n; j++)
             {
                 if (tableauAux[i + 1][j] != 0)
                     tableauAux[i + 1][j] *= -1;
             }
+            tableauAux[i + 1][m + 2 * n] *= -1;
         }
     }
 
@@ -175,26 +176,33 @@ int getNegativeColumn(vector<vector<double>> &t)
     return index;
 }
 
-void generateViableSolution()
+void generateViableSolution(vector<vector<double>> &t)
 {
     for (int i = 0; i < n; i++)
-        if (B[i] < m + n)
-            viableSolution[B[i] - n] = tableau[i + 1][m + n];
+        if (B[i] < t[0].size() - 1)
+            viableSolution[B[i] - n] = t[i + 1][t[0].size() - 1];
 }
 
-void generateCertificate(bool isInf, int col)
+void generateCertificate(vector<vector<double>> &t, string type, int col)
 {
-    if (isInf)
+    if (type == "inf")
     {
         certificate.resize(m, 0);
-        certificate[col - n] = 1;
         for (int i = 0; i < n; i++)
             if (B[i] < m + n)
-                certificate[B[i] - n] = -tableau[i + 1][col];
+                certificate[B[i] - n] = -t[i + 1][col];
+        certificate[col - n] = 1;
+    }
+    else if (type == "inv")
+    {
+        for (int i = 0; i < n; i++)
+            certificate[i] = t[0][i];
     }
     else
+    {
         for (int i = 0; i < n; i++)
-            certificate[i] = tableau[0][i];
+            certificate[i] = t[0][i];
+    }
 }
 
 void optimalSolution()
@@ -202,27 +210,27 @@ void optimalSolution()
     cout << "otima" << endl;
     cout << tableau[0][m + n] << endl;
 
-    generateViableSolution();
+    generateViableSolution(tableau);
     for (int i = 0; i < m; i++)
         cout << viableSolution[i] << ' ';
     cout << endl;
 
-    generateCertificate(false, 0);
+    generateCertificate(tableau, "opt", 0);
     for (int i = 0; i < n; i++)
         cout << certificate[i] << ' ';
     cout << endl;
 }
 
-void ilimitedSolution(int col)
+void ilimitedSolution(vector<vector<double>> &t, int col)
 {
     cout << "ilimitada" << endl;
 
-    generateViableSolution();
+    generateViableSolution(t);
     for (int i = 0; i < m; i++)
         cout << viableSolution[i] << ' ';
     cout << endl;
 
-    generateCertificate(true, col);
+    generateCertificate(t, "inf", col);
     for (int i = 0; i < m; i++)
         cout << certificate[i] << ' ';
     cout << endl;
@@ -232,10 +240,10 @@ void unviableSolution()
 {
     cout << "inviavel" << endl;
 
-    // generateCertificate(false, 0);
-    // for (int i = 0; i < n; i++)
-    //     cout << certificate[i] << ' ';
-    // cout << endl;
+    generateCertificate(tableauAux, "inv", 0);
+    for (int i = 0; i < n; i++)
+        cout << certificate[i] << ' ';
+    cout << endl;
 }
 
 int objective(vector<vector<double>> &t)
@@ -246,12 +254,11 @@ int objective(vector<vector<double>> &t)
     while (col > 0)
     {
         int l = findPivot(t, col);
-
         if (l > 0)
             B[l - 1] = col;
         else
         {
-            ilimitedSolution(col);
+            ilimitedSolution(t, col);
             return INF;
         }
 
@@ -259,12 +266,12 @@ int objective(vector<vector<double>> &t)
         col = getNegativeColumn(t);
     }
 
-    return t[0][t.size() - 1];
+    return t[0][t[0].size() - 1];
 }
 
 int main(int argc, char *argv[])
 {
-    cout << fixed << setprecision(0);
+    cout << fixed << setprecision(3);
 
     readData(argv);
     if (n <= 0 || m <= 0)
